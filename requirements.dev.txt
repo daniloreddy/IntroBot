@@ -1,0 +1,4 @@
+# Dev tools
+pylint>=3.0
+black>=24.0
+mypy>=1.8

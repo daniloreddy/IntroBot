@@ -1,0 +1,26 @@
+[tool.pylint.main]
+ignore = ["venv", "coffy-env", "build", "tests"]
+init-hook = "import sys; sys.path.append('.')"
+
+# [tool.pylint.messages_control]
+disable = ["C0114", "C0115", "C0116", "W0718", "W0613"]
+
+[tool.pylint.format]
+max-line-length = 200
+
+[tool.pylint.typecheck]
+ignored-modules = ["logging"]
+
+[tool.pylint.design]
+max-args = 10
+
+[tool.pylint.reports]
+reports = false
+
+[tool.black]
+line-length = 200
+target-version = ["py311"]
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true

@@ -1,0 +1,5 @@
+discord.py>=2.0.0             # Discord bot framework
+python-dotenv                 # Gestione variabili ambiente
+aiohttp>=3.8                  # HTTP async client
+PyNaCl>=1.5.0                 # Voice support for Discord (required for audio)
+yt-dlp

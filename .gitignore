@@ -1,0 +1,5 @@
+.env
+logs/**
+data/**
+coffy-env/
+__pycache__/

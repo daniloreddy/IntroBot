@@ -1,0 +1,14 @@
+[Unit]
+Description=Introbot Bot Service
+After=network.target
+
+[Service]
+User=danilo
+Group=danilo
+WorkingDirectory=/redberry/IntroBot
+ExecStart=/redberry/IntroBot/introbot.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
