@@ -11,17 +11,7 @@ intents.voice_states = True
 intents.guilds = True
 intents.members = True
 
-bot = commands.Bot(command_prefix="/", intents=intents)
-
-@bot.event
-async def on_ready():
-    bot_logger.info(f"IntroBot connesso come {bot.user} (ID: {bot.user.id})")
-
-    try:
-        synced = await bot.tree.sync()
-        bot_logger.info(f"Comandi slash sincronizzati: {len(synced)}")
-    except Exception as e:
-        bot_logger.error(f"Errore durante la sincronizzazione dei comandi: {e}")
+bot = commands.Bot(command_prefix=None, intents=intents)
 
 # Listener vocale
 @bot.event
@@ -32,6 +22,11 @@ async def on_voice_state_update(member, before, after):
 async def main():
     await bot.load_extension("cogs.intro_manager")
     await bot.start(DISCORD_BOT_TOKEN)
+    try:
+        synced = await bot.tree.sync()
+        bot_logger.info(f"Comandi slash sincronizzati: {len(synced)}")
+    except Exception as e:
+        bot_logger.error(f"Errore durante la sincronizzazione dei comandi: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -1,5 +1,8 @@
-discord.py>=2.0.0             # Discord bot framework
-python-dotenv                 # Gestione variabili ambiente
-aiohttp>=3.8                  # HTTP async client
-PyNaCl>=1.5.0                 # Voice support for Discord (required for audio)
-yt-dlp
+# Nota: Installa FFmpeg manualmente e assicurati che sia nel PATH del sistema
+# Link: https://ffmpeg.org/download.html
+aiohttp>=3.8                 # HTTP async client
+discord.py>=2.0.0            # Discord bot framework
+PyNaCl>=1.5.0                # Voice support for Discord (required for audio)
+pydub>=0.25.1                # Per validazione durata e formato file audio
+python-dotenv>=0.21.0        # Gestione variabili ambiente
+yt-dlp>=2023.12.30           # YouTube downloader

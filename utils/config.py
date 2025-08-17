@@ -2,6 +2,7 @@
 
 import os
 import time
+import logging
 
 from dotenv import load_dotenv
 
@@ -16,7 +17,7 @@ DEFAULT_LANG = "en"
 DATA_DIR = os.path.normpath(os.path.join(BASE_DIR, "../data"))
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
-INTRO_DIR = os.path.normpath(os.path.join(DATA_DIR, "../data"))
+INTRO_DIR = os.path.normpath(os.path.join(DATA_DIR, "intros"))
 if not os.path.exists(INTRO_DIR):
     os.makedirs(INTRO_DIR)
 
@@ -42,6 +43,11 @@ if DISCORD_BOT_TOKEN == "__unset__":
     raise ValueError("Variabile d'ambiente DISCORD_BOT_TOKEN non impostata!")
 
 # --- Intro Settings ---
-INTRO_MAX_SECONDS = 10  # Limite massimo di riproduzione per ogni intro
+INTRO_MAX_SECONDS = 11  # Limite massimo di riproduzione per ogni intro
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+# --- Logging ---
+LOG_LEVEL_ENV = os.getenv("LOG_LEVEL", "INFO")
+valid_levels = logging.getLevelNamesMapping()
+if LOG_LEVEL_ENV not in valid_levels:
+    raise ValueError(f"Livello di log '{LOG_LEVEL_ENV}' non valido. Valori validi: {list(valid_levels.keys())}")
+LOG_LEVEL = valid_levels[LOG_LEVEL_ENV]  # Define the log level for use in logger.py

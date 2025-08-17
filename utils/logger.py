@@ -38,6 +38,6 @@ def setup_logger(name: str, log_file: str, level=logging.DEBUG) -> logging.Logge
 
 
 # Loggers with rotation
-bot_logger = setup_logger("bot", "bot.log", level=logging.getLevelNamesMapping().get(LOG_LEVEL, logging.INFO))
-service_logger = setup_logger("services", "services.log", level=logging.getLevelNamesMapping().get(LOG_LEVEL, logging.INFO))
+bot_logger = setup_logger("bot", "bot.log", level=LOG_LEVEL)
+service_logger = setup_logger("services", "services.log", level=LOG_LEVEL)
 error_logger = setup_logger("errors", "errors.log", level=logging.ERROR)
