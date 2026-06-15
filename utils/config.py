@@ -2,6 +2,7 @@
 
 import logging
 import os
+import shutil
 import time
 
 from dotenv import load_dotenv
@@ -43,12 +44,11 @@ if DISCORD_BOT_TOKEN == "__unset__":
 # Percorso al binario ffmpeg. Impostare FFMPEG_PATH in .env se non è nel PATH di sistema.
 # Esempio: FFMPEG_PATH=C:\ffmpeg\bin\ffmpeg.exe
 FFMPEG_PATH: str = os.getenv("FFMPEG_PATH", "ffmpeg")
+# Risolve il path assoluto (necessario per yt-dlp --ffmpeg-location che non accetta nomi di binari)
+_ffmpeg_abs: str = shutil.which(FFMPEG_PATH) or FFMPEG_PATH
+FFMPEG_DIR: str = os.path.dirname(os.path.abspath(_ffmpeg_abs))
 # ffprobe è derivato automaticamente dalla stessa directory di ffmpeg, ma può essere sovrascritto.
-_ffmpeg_dir = os.path.dirname(FFMPEG_PATH)
-FFPROBE_PATH: str = os.getenv(
-    "FFPROBE_PATH",
-    os.path.join(_ffmpeg_dir, "ffprobe") if _ffmpeg_dir else "ffprobe",
-)
+FFPROBE_PATH: str = os.getenv("FFPROBE_PATH", os.path.join(FFMPEG_DIR, "ffprobe"))
 
 # --- Intro Settings ---
 INTRO_MAX_SECONDS = 11  # Limite massimo di riproduzione per ogni intro

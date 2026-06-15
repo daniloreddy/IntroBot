@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 import aiohttp
 
-from utils.config import FFMPEG_PATH, FFPROBE_PATH, INTRO_DIR, INTRO_MAX_SECONDS
+from utils.config import FFMPEG_DIR, FFPROBE_PATH, INTRO_DIR, INTRO_MAX_SECONDS
 from utils.logger import bot_logger
 
 
@@ -101,9 +101,9 @@ async def download_audio_clip(user_id: int, guild_id: int, url: str, start_time:
         "--audio-quality",
         "0",
         "--ffmpeg-location",
-        FFMPEG_PATH,
+        FFMPEG_DIR,
         "--postprocessor-args",
-        f"-ss {start_time} -to {end_time}",
+        f"ffmpeg:-ss {start_time} -to {end_time}",
         "-o",
         path,
         url,
