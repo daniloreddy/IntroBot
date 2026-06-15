@@ -1,5 +1,21 @@
+# Environment
 .env
-logs/**
-data/**
-coffy-env/
+
+# Runtime data
+data/
+logs/
+
+# Python
+.venv/
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Tools
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Temp files
+*.tmp.mp3

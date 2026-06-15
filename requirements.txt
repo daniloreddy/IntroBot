@@ -1,8 +1,8 @@
-# Nota: Installa FFmpeg manualmente e assicurati che sia nel PATH del sistema
+# Nota: FFmpeg richiesto (ffmpeg + ffprobe). Configurare FFMPEG_PATH in .env se non nel PATH.
 # Link: https://ffmpeg.org/download.html
 aiohttp>=3.8                 # HTTP async client
 discord.py>=2.0.0            # Discord bot framework
 PyNaCl>=1.5.0                # Voice support for Discord (required for audio)
-pydub>=0.25.1                # Per validazione durata e formato file audio
+davey>=0.1.5                 # Discord E2EE voice protocol (DAVE), required by discord.py>=2.5
 python-dotenv>=0.21.0        # Gestione variabili ambiente
 yt-dlp>=2023.12.30           # YouTube downloader

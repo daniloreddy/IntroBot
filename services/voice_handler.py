@@ -1,88 +1,107 @@
-import os
 import asyncio
+import os
+from typing import cast
+
 import discord
 
+from utils.config import FFMPEG_PATH, INTRO_MAX_SECONDS
 from utils.file_utils import get_intro_path, validate_audio_file
 from utils.logger import bot_logger
-from utils.config import INTRO_MAX_SECONDS
+
+guild_queues: dict[int, asyncio.Queue[discord.Member]] = {}
+guild_tasks: dict[int, asyncio.Task[None]] = {}
 
 
-# Lock per ogni utente+server
-play_locks = {}
+async def guild_player(guild_id: int, queue: asyncio.Queue[discord.Member]) -> None:
+    while True:
+        member = await queue.get()
 
-# Flag per evitare riproduzioni concorrenti nello stesso server
-bot_busy = set()
+        # Re-check member is still in a voice channel (may have left while queued)
+        if member.voice is None or member.voice.channel is None:
+            bot_logger.debug(f"--- {member.name} ha lasciato il canale prima della riproduzione, skip")
+            queue.task_done()
+            continue
+
+        target_channel = member.voice.channel
+        path = get_intro_path(member.id, guild_id)
+
+        if not os.path.exists(path):
+            bot_logger.debug(f"--- Nessun intro per {member.name}, skip")
+            queue.task_done()
+            continue
+
+        if not await validate_audio_file(path, INTRO_MAX_SECONDS):
+            bot_logger.debug(f"--- File intro non valido per {member.name}, skip")
+            queue.task_done()
+            continue
+
+        vc: discord.VoiceClient | None = None
+        try:
+            voice_client = cast(discord.VoiceClient | None, target_channel.guild.voice_client)
+
+            if voice_client and voice_client.is_connected():
+                if voice_client.channel != target_channel:
+                    await voice_client.move_to(target_channel)
+                vc = voice_client
+            else:
+                max_retries = 2
+                for attempt in range(max_retries + 1):
+                    try:
+                        vc = cast(discord.VoiceClient, await target_channel.connect(reconnect=False))
+                        for _ in range(6):
+                            if vc.is_connected():
+                                break
+                            await asyncio.sleep(0.5)
+                        else:
+                            raise discord.DiscordException("Connection timeout")
+                        break
+                    except discord.DiscordException as e:
+                        bot_logger.error(f"--- Tentativo {attempt + 1}/{max_retries + 1} fallito: {e}")
+                        if attempt == max_retries:
+                            raise
+                        await asyncio.sleep(1)
+
+            assert vc is not None
+            vc.play(discord.FFmpegPCMAudio(path, executable=FFMPEG_PATH, before_options=f"-t {INTRO_MAX_SECONDS} -loglevel panic"))
+            bot_logger.debug(f"--- Riproduzione avviata per {member.name}")
+
+            timeout: float = 0
+            max_timeout = INTRO_MAX_SECONDS + 2
+            while vc.is_playing() and timeout < max_timeout:
+                await asyncio.sleep(0.5)
+                timeout += 0.5
+
+            bot_logger.debug(f"--- Riproduzione terminata per {member.name}")
+
+        except discord.DiscordException as e:
+            bot_logger.error(f"Errore Discord durante la riproduzione per {member.name}: {e}")
+        except OSError as e:
+            bot_logger.error(f"Errore accesso file audio per {member.name}: {e}")
+        finally:
+            if vc and vc.is_connected():
+                await vc.disconnect()
+                bot_logger.debug("--- Disconnesso dal canale vocale")
+            queue.task_done()
 
 
-async def play_intro_if_available(_, member, before, after):
+async def play_intro_if_available(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState) -> None:
     bot_logger.debug(f"--- {member.name} Passa da canale {before.channel} a canale {after.channel}")
 
     if member.bot or before.channel == after.channel or after.channel is None:
         return
 
-    key_lock = f"{member.id}-{after.channel.guild.id}"
-    key_busy = f"{after.channel.guild.id}"
+    guild_id = after.channel.guild.id
 
-    # Skip se il bot è già impegnato in questo server
-    if key_busy in bot_busy:
-        bot_logger.debug(f"--- Bot già impegnato nel server {key_busy}, ignora evento")
+    # Enqueue member (check intro exists early to avoid filling queue with no-ops)
+    path = get_intro_path(member.id, guild_id)
+    if not os.path.exists(path):
         return
 
-    lock = play_locks.setdefault(key_lock, asyncio.Lock())
+    q = guild_queues.setdefault(guild_id, asyncio.Queue())
 
-    async with lock:
-        voice_client = after.channel.guild.voice_client
-        if voice_client and voice_client.is_connected():
-            if voice_client.channel != after.channel:
-                await voice_client.move_to(after.channel)
-            if voice_client.is_playing():
-                bot_logger.debug("--- Voice client già in riproduzione, ignoro")
-                return
+    # Start consumer task if not running (check is synchronous — no await between check and create_task)
+    if guild_id not in guild_tasks or guild_tasks[guild_id].done():
+        guild_tasks[guild_id] = asyncio.create_task(guild_player(guild_id, q))
 
-        path = get_intro_path(member.id, after.channel.guild.id)
-        if not os.path.exists(path) or not validate_audio_file(path, INTRO_MAX_SECONDS):
-            bot_logger.debug("--- File intro non esiste per l'utente, ignoro")
-            return
-
-        try:
-            bot_busy.add(key_busy)
-
-            vc = await after.channel.connect(reconnect=True)
-            bot_logger.debug("--- Connessione vocale richiesta, attendo stabilizzazione...")
-
-            # Aspetta max 3 secondi
-            for _ in range(6):
-                if vc.is_connected():
-                    break
-                await asyncio.sleep(0.5)
-            else:
-                bot_logger.error(f"Timeout di connessione vocale per {member.name} nel server {after.channel.guild.id}")
-                bot_busy.discard(key_busy)
-                return
-
-            bot_logger.debug("--- Connessione stabilita, avvio riproduzione")
-            vc.play(discord.FFmpegPCMAudio(path, before_options=f"-t {INTRO_MAX_SECONDS} -loglevel panic"))
-            bot_logger.debug("--- Audio avviato")
-
-            # Verifica playback
-            await asyncio.sleep(0.5)
-            bot_logger.debug(f"vc.is_connected() = {vc.is_connected()}, vc.is_playing() = {vc.is_playing()}")
-
-            timeout = 0
-            max_timeout = INTRO_MAX_SECONDS + 2  # Margine di 2 secondi
-            while vc.is_playing() and timeout < max_timeout:
-                await asyncio.sleep(0.5)
-                timeout += 0.5
-
-            bot_logger.debug("--- Riproduzione terminata o timeout")
-            await vc.disconnect()
-            # await asyncio.sleep(0.5)
-            bot_logger.debug("--- Disconnesso dal canale vocale")
-
-        except discord.DiscordException as e:
-            bot_logger.error(f"Errore Discord durante la riproduzione per {member.name}: {e}")
-        except OSError as e:
-            bot_logger.error(f"Errore di accesso al file audio per {member.name}: {e}")
-        finally:
-            bot_busy.discard(key_busy)
-            play_locks.pop(key_lock, None)
+    q.put_nowait(member)
+    bot_logger.debug(f"--- {member.name} aggiunto alla coda (guild {guild_id}, size={q.qsize()})")

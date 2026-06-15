@@ -2,12 +2,12 @@
 
 import logging
 import os
-
 from logging.handlers import RotatingFileHandler
+
 from utils.config import LOG_DIR, LOG_LEVEL
 
 
-def setup_logger(name: str, log_file: str, level=logging.DEBUG) -> logging.Logger:
+def setup_logger(name: str, log_file: str, level: int = logging.DEBUG) -> logging.Logger:
     """
     Create and configure a rotating logger.
 
