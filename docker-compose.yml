@@ -1,6 +1,6 @@
 services:
   intro-bot:
-    build: .
+    image: ghcr.io/daniloreddy/introbot:latest
     env_file: .env
     volumes:
       - ./data:/app/data

@@ -16,13 +16,12 @@ Discord bot that plays a personal audio intro when a user joins a voice channel.
 - FFmpeg (+ ffprobe) on `PATH`, or configured via `.env`
 - A Discord bot token with the following enabled in the [Developer Portal](https://discord.com/developers/applications):
   - Privileged intent: **Server Members**
-  - Privileged intent: **Message Content** (optional, no prefix commands)
   - Bot permission: **Connect** + **Speak** in voice channels
 
 ## Setup
 
 ```bash
-git clone <repo>
+git clone https://github.com/daniloreddy/IntroBot.git
 cd IntroBot
 cp .env.example .env        # fill in DISCORD_BOT_TOKEN
 python -m venv .venv
@@ -38,10 +37,33 @@ scripts\introbot.bat        # Windows
 
 The scripts auto-create and activate the venv if it doesn't exist.
 
-### Docker
+### Docker — without cloning (recommended)
 
 ```bash
+# 1. Login to GHCR (requires a Classic PAT with read:packages scope)
+docker login ghcr.io -u <your-github-username>
+
+# 2. Create the directory structure
+mkdir -p introbot/{data,logs}
+cd introbot
+
+# 3. Download docker-compose.yml
+curl -o docker-compose.yml https://raw.githubusercontent.com/daniloreddy/IntroBot/master/docker-compose.yml
+
+# 4. Create .env (see .env.example in the repo for all variables)
+# At minimum: DISCORD_BOT_TOKEN=<your-token>
+
+# 5. Start
+docker compose up -d
+```
+
+### Docker — from source
+
+```bash
+git clone https://github.com/daniloreddy/IntroBot.git
+cd IntroBot
 cp .env.example .env        # fill in DISCORD_BOT_TOKEN
+docker build -t ghcr.io/daniloreddy/introbot:latest .
 docker compose up -d
 ```
 

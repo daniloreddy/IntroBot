@@ -10,7 +10,6 @@ from utils.config import DISCORD_BOT_TOKEN
 from utils.logger import bot_logger
 
 intents = discord.Intents.default()
-intents.message_content = True
 intents.voice_states = True
 intents.guilds = True
 intents.members = True
