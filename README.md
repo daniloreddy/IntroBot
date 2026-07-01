@@ -12,7 +12,7 @@ Discord bot that plays a personal audio intro when a user joins a voice channel.
 
 ## Requirements
 
-- Python 3.11+
+- Python 3.12+
 - FFmpeg (+ ffprobe) on `PATH`, or configured via `.env`
 - A Discord bot token with the following enabled in the [Developer Portal](https://discord.com/developers/applications):
   - Privileged intent: **Server Members**
@@ -36,6 +36,16 @@ scripts\introbot.bat        # Windows
 ```
 
 The scripts auto-create and activate the venv if it doesn't exist.
+
+### Run as a systemd service (Linux)
+
+```bash
+# Copy and edit the unit file
+cp scripts/introbot.service /etc/systemd/system/introbot.service
+# Edit WorkingDirectory and ExecStart paths to match your install location
+systemctl daemon-reload
+systemctl enable --now introbot
+```
 
 ### Docker — without cloning (recommended)
 

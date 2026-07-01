@@ -1,21 +1,30 @@
 @echo off
 cd /d "%~dp0.."
 
+if not exist "venv\" (
+    echo venv non trovato, creazione in corso...
+    python -m venv venv
+    call venv\Scripts\activate
+    pip install -r requirements.dev.txt
+) else (
+    call venv\Scripts\activate
+)
+
 echo === ruff lint ===
-.venv\Scripts\ruff check .
+ruff check .
 if errorlevel 1 exit /b 1
 
 echo === ruff format ===
-.venv\Scripts\ruff format --check .
+ruff format --check .
 if errorlevel 1 exit /b 1
 
 echo === mypy ===
-.venv\Scripts\mypy introbot.py cogs\ services\ utils\
+mypy introbot.py cogs\ services\ utils\
 if errorlevel 1 exit /b 1
 
 if exist "tests\" (
     echo === pytest ===
-    .venv\Scripts\pytest tests\ -v
+    pytest tests\ -v
     if errorlevel 1 exit /b 1
 ) else (
     echo === pytest: nessuna directory tests\, skip ===

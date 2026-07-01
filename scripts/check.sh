@@ -2,18 +2,27 @@
 set -e
 cd "$(dirname "$0")/.."
 
+if [ ! -d ".venv" ]; then
+    echo "venv non trovato, creazione in corso..."
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.dev.txt
+else
+    source .venv/bin/activate
+fi
+
 echo "=== ruff lint ==="
-.venv/bin/ruff check .
+ruff check .
 
 echo "=== ruff format ==="
-.venv/bin/ruff format --check .
+ruff format --check .
 
 echo "=== mypy ==="
-.venv/bin/mypy introbot.py cogs/ services/ utils/
+mypy introbot.py cogs/ services/ utils/
 
 if [ -d "tests" ]; then
     echo "=== pytest ==="
-    .venv/bin/pytest tests/ -v
+    pytest tests/ -v
 else
     echo "=== pytest: nessuna directory tests/, skip ==="
 fi

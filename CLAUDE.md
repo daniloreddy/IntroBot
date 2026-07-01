@@ -28,6 +28,7 @@ No test suite exists yet (`tests/` not present).
 
 Requires a `.env` file (never read or log it). See `.env.example` for all variables.
 - `DISCORD_BOT_TOKEN` — required; bot refuses to start without it
+- `DISCORD_FALLBACK_ID` — optional; owner Discord user ID (default `123456789012345678`)
 - `FFMPEG_PATH` — optional; defaults to `ffmpeg` on PATH
 - `FFPROBE_PATH` — optional; auto-derived from same directory as `FFMPEG_PATH`
 - `LOG_LEVEL` — optional; defaults to `INFO`
